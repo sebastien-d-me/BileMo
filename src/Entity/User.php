@@ -30,7 +30,7 @@ class User
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Customer $clientId = null;
+    private ?Customer $customerId = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
@@ -103,14 +103,14 @@ class User
         return $this;
     }
 
-    public function getClientId(): ?Customer
+    public function getCustomerId(): ?Customer
     {
-        return $this->clientId;
+        return $this->customerId;
     }
 
-    public function setClientId(?Customer $clientId): static
+    public function setCustomerId(?Customer $customerId): static
     {
-        $this->clientId = $clientId;
+        $this->customerId = $customerId;
 
         return $this;
     }
