@@ -1,0 +1,48 @@
+@startuml class
+left to right direction
+skinparam actorStyle Awesome
+skinparam ArrowThickness 1
+!theme aws-orange
+skinparam backgroundcolor White
+
+'Titre'
+title Class
+
+'Customer'
+class Customer {
+    {static} +id: int
+    +name: string
+    +created_at: datetime
+    +updated_at: datetime
+}
+
+'Product'
+class Product {
+    {static} +id: int
+    +brand: string
+    +model: string
+    +system: string
+    +storage: int
+    +price: double
+    +stock: int
+    +created_at: datetime
+    +updated_at: datetime
+}
+
+'User'
+class User {
+    {static} +id: int
+    +customer_id: int
+    +email: string
+    +username: string
+    +password: string
+    +first_name: string
+    +last_name: string
+    +created_at: datetime
+    +updated_at: datetime
+}
+
+
+'Déroulement'
+Customer "1" -- "0..*" User: $warning("CREATE")
+@enduml
