@@ -26,19 +26,21 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
         for($userIndex = 0; $userIndex < 100; $userIndex++) {
             $firstName = strtolower($faker->firstName());
             $lastName = strtolower($faker->lastName());
-            $email = $firstName.".".$lastName."@".$faker->safeEmailDomain();
             $customer = $customersList[array_rand($customersList)];
-            $currentDate = date("Y-m-d H:i:s");
+            $email = $firstName.".".$lastName."@".$faker->safeEmailDomain();
+            $username = $firstName.".".$lastName;
+            $password = password_hash($faker->password(), PASSWORD_DEFAULT);
+            $userDate = \DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $faker->dateTimeThisYear()->format("Y-m-d H:i:s"));
 
             $user = new User();
+            $user->setCustomer($customer);
             $user->setEmail($email);
-            $user->setUsername($firstName.".".$lastName);
-            $user->setPassword($faker->password());
+            $user->setUsername($username);
+            $user->setPassword($password);
             $user->setFirstName($firstName);
             $user->setLastName($lastName);
-            $user->setCustomerId($customer);
-            $user->setCreatedAt(\DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $currentDate));
-            $user->setUpdatedAt(\DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $currentDate));
+            $user->setCreatedAt($userDate);
+            $user->setUpdatedAt($userDate);
 
             $manager->persist($user);
         }
