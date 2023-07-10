@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +22,7 @@ class UserController extends AbstractController
         $usersList = $userRepository->findBy([
             "customer" => $customerId
         ]);
+
         $jsonUsersList = $serializer->serialize($usersList, "json");
 
         return new JsonResponse($jsonUsersList, Response::HTTP_OK, [], true);
@@ -33,6 +36,7 @@ class UserController extends AbstractController
             "customer" => $customerId, 
             "id" => $userId
         ]);
+
         $jsonUsersList = $serializer->serialize($usersList, "json");
 
         return new JsonResponse($jsonUsersList, Response::HTTP_OK, [], true);
@@ -40,9 +44,20 @@ class UserController extends AbstractController
 
 
     #[Route("/api/users", name: "add_user_by_customer", methods: ["POST"])]
-    public function addUserByCustomer(EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator): JsonResponse
+    public function addUserByCustomer(CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator): JsonResponse
     {
+        $content = $request->toArray();
+        $customerId = $content["customerId"] ?? -1;
 
+        $user = $serializer->deserialize($request->getContent(), User::class, "json");
+        $user->setCustomer($customerRepository->find($customerId));
+
+        $entityManager->persist($user);
+        $entityManager->flush();
+        
+        $jsonUser = $serializer->serialize($user, "json");
+
+        return new JsonResponse($jsonUser, Response::HTTP_CREATED, [], true);
     }
 
 
@@ -52,6 +67,7 @@ class UserController extends AbstractController
         $user = $userRepository->findOneBy([
             "id" => $userId
         ]);
+
         $entityManager->remove($user);
         $entityManager->flush();
 

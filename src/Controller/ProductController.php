@@ -15,6 +15,7 @@ class ProductController extends AbstractController
     public function getAllProducts(ProductRepository $productRepository, SerializerInterface $serializer): JsonResponse
     {
         $productsList = $productRepository->findAll();
+        
         $jsonProductsList = $serializer->serialize($productsList, "json");
 
         return new JsonResponse($jsonProductsList, Response::HTTP_OK, [], true);
@@ -27,6 +28,7 @@ class ProductController extends AbstractController
         $product = $productRepository->findOneBy([
             "id" => $productId
         ]);
+
         $jsonProduct = $serializer->serialize($product, "json");
         
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);

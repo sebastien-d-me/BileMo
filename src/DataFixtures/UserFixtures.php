@@ -24,12 +24,12 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
         $customersList = $manager->getRepository(Customer::class)->findAll();
 
         for($userIndex = 0; $userIndex < 100; $userIndex++) {
-            $firstName = strtolower($faker->firstName());
-            $lastName = strtolower($faker->lastName());
+            $firstName = $faker->firstName();
+            $lastName = $faker->lastName();
             $customer = $customersList[array_rand($customersList)];
             $email = $firstName.".".$lastName."@".$faker->safeEmailDomain();
             $username = $firstName.".".$lastName;
-            $password = password_hash($faker->password(), PASSWORD_DEFAULT);
+            $password = $faker->password();
             $userDate = \DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $faker->dateTimeThisYear()->format("Y-m-d H:i:s"));
 
             $user = new User();
