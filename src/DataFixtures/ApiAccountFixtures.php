@@ -21,16 +21,17 @@ class ApiAccountFixtures extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create();
-
         $customers = $manager->getRepository(Customer::class)->findAll();
+
         foreach($customers as $customer) {
             $email = $customer->getName()."@business.com";
             $role = ["ROLE_USER"];
-            $password = $faker->password();
+            $password = $customer->getName()."123";
             $createdAt = $customer->getCreatedAt();
             $updatedAt = $customer->getUpdatedAt();
 
             $apiAccount = new ApiAccount();
+            $apiAccount->setCustomer($customer);
             $apiAccount->setEmail($email);
             $apiAccount->setRoles($role);
             $apiAccount->setPassword($password);

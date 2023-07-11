@@ -21,12 +21,12 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create();
-        $customersList = $manager->getRepository(Customer::class)->findAll();
+        $customers = $manager->getRepository(Customer::class)->findAll();
 
         for($userIndex = 0; $userIndex < 100; $userIndex++) {
             $firstName = $faker->firstName();
             $lastName = $faker->lastName();
-            $customer = $customersList[array_rand($customersList)];
+            $customer = $customers[array_rand($customers)];
             $email = $firstName.".".$lastName."@".$faker->safeEmailDomain();
             $username = $firstName.".".$lastName;
             $password = $faker->password();
