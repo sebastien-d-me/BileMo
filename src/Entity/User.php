@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
@@ -14,18 +15,23 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The email cannot be null.")]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The username cannot be null.")]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The password cannot be null.")]
     private ?string $password = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "The firstname cannot be null.")]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "The lastname cannot be null.")]
     private ?string $lastName = null;
 
     #[ORM\ManyToOne]
@@ -33,9 +39,11 @@ class User
     private ?Customer $customer = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: "The creation date cannot be null.")]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: "The updated date cannot be null. Use the same value as creation date if this is a new user.")]
     private ?\DateTimeImmutable $updatedAt = null;
 
     public function getId(): ?int
