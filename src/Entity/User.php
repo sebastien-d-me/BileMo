@@ -50,7 +50,7 @@ class User
 
     public function setEmail(string $email): static
     {
-        $this->email = $email;
+        $this->email = strtolower($email);
 
         return $this;
     }
@@ -62,7 +62,7 @@ class User
 
     public function setUsername(string $username): static
     {
-        $this->username = $username;
+        $this->username = strtolower($username);
 
         return $this;
     }
@@ -74,7 +74,7 @@ class User
 
     public function setPassword(string $password): static
     {
-        $this->password = $password;
+        $this->password = password_hash($password, PASSWORD_DEFAULT);
 
         return $this;
     }
@@ -86,7 +86,7 @@ class User
 
     public function setFirstName(string $firstName): static
     {
-        $this->firstName = $firstName;
+        $this->firstName = strtolower($firstName);
 
         return $this;
     }
@@ -98,7 +98,7 @@ class User
 
     public function setLastName(string $lastName): static
     {
-        $this->lastName = $lastName;
+        $this->lastName = strtolower($lastName);
 
         return $this;
     }
