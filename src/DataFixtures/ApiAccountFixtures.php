@@ -8,6 +8,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class ApiAccountFixtures extends Fixture implements DependentFixtureInterface
 {
@@ -18,6 +19,11 @@ class ApiAccountFixtures extends Fixture implements DependentFixtureInterface
         ];
     }
 
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create();
@@ -25,12 +31,14 @@ class ApiAccountFixtures extends Fixture implements DependentFixtureInterface
 
         foreach($customers as $customer) {
             $email = $customer->getName()."@business.com";
-            $role = ["ROLE_USER"];
-            $password = $customer->getName()."123";
+            $role = ["ROLE_USER", "ROLE_".strtoupper($customer->getName())];
             $createdAt = $customer->getCreatedAt();
             $updatedAt = $customer->getUpdatedAt();
 
             $apiAccount = new ApiAccount();
+
+            $password = $this->userPasswordHasher->hashPassword($apiAccount, $customer->getName()."123");
+            
             $apiAccount->setCustomer($customer);
             $apiAccount->setEmail($email);
             $apiAccount->setRoles($role);

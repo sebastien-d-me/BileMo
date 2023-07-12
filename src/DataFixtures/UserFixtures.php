@@ -29,7 +29,7 @@ class UserFixtures extends Fixture implements DependentFixtureInterface
             $customer = $customers[array_rand($customers)];
             $email = $firstName.".".$lastName."@".$faker->safeEmailDomain();
             $username = $firstName.".".$lastName;
-            $password = $faker->password();
+            $password = password_hash($faker->password(), PASSWORD_DEFAULT);
             $userDate = \DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $faker->dateTimeThisYear()->format("Y-m-d H:i:s"));
 
             $user = new User();

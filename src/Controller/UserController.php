@@ -2,10 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\ApiAccount;
 use App\Entity\User;
+use App\Repository\ApiAccountRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +21,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
+    public function __construct(JWTTokenManagerInterface $jwtManager)
+    {
+        $this->jwtManager = $jwtManager;
+    }
+
+
     #[Route("/api/users/{customerId}", name: "get_all_users_by_customer", methods: ["GET"])]
     public function getAllUsersByCustomer(int $customerId, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
@@ -45,16 +55,25 @@ class UserController extends AbstractController
 
 
     #[Route("/api/users", name: "add_user_by_customer", methods: ["POST"])]
-    public function addUserByCustomer(CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
+    public function addUserByCustomer(ApiAccountRepository $apiAccountRepository, CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
         $content = $request->toArray();
         $customerId = $content["customerId"] ?? -1;
 
+        $jwtToken = explode(".", str_replace("bearer ", "", $request->headers->get("Authorization")));
+        $decodedJwtToken = json_decode(base64_decode($jwtToken[1]), true);
+        $apiAccountData = $apiAccountRepository->findOneBy([
+            "email" => $decodedJwtToken["email"]
+        ]);
+        $apiAccountId = $apiAccountData->getCustomer()->getId();
+        if($apiAccountId !== $customerId) {
+            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
+        }
+
         $user = $serializer->deserialize($request->getContent(), User::class, "json");
 
-        $errors = $validator->validate($user);
-        if($errors->count() > 0) {
-            return new JsonResponse($serializer->serialize($errors, "json"), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        if($validator->validate($user)->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, "json"), Response::HTTP_BAD_REQUEST, [], true);
         }
 
         $user->setCustomer($customerRepository->find($customerId));
@@ -69,11 +88,22 @@ class UserController extends AbstractController
 
 
     #[Route("/api/users/{userId}", name: "delete_user_by_customer", methods: ["DELETE"])]
-    public function deleteUserByCustomer(EntityManagerInterface $entityManager, int $userId, UserRepository $userRepository): JsonResponse
+    public function deleteUserByCustomer(ApiAccountRepository $apiAccountRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
         $user = $userRepository->findOneBy([
             "id" => $userId
         ]);
+        $userCustomer = $user->getCustomer()->getId();
+
+        $jwtToken = explode(".", str_replace("bearer ", "", $request->headers->get("Authorization")));
+        $decodedJwtToken = json_decode(base64_decode($jwtToken[1]), true);
+        $apiAccountData = $apiAccountRepository->findOneBy([
+            "email" => $decodedJwtToken["email"]
+        ]);
+        $apiAccountId = $apiAccountData->getCustomer()->getId();
+        if($apiAccountId !== $userCustomer) {
+            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
+        }
 
         $entityManager->remove($user);
         $entityManager->flush();
