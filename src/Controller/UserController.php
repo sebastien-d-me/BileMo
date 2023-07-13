@@ -26,6 +26,7 @@ class UserController extends AbstractController
         $this->jwtManager = $jwtManager;
     }
 
+
     public function checkSameCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer): bool
     {
         $jwtToken = explode(".", str_replace("bearer ", "", $request->headers->get("Authorization")));
@@ -44,11 +45,12 @@ class UserController extends AbstractController
 
 
     #[Route("/api/users/{customerId}", name: "get_all_users_by_customer", methods: ["GET"])]
-    public function getAllUsersByCustomer(int $customerId, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
+    public function getAllUsersByCustomer(int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
-        $usersList = $userRepository->findBy([
-            "customer" => $customerId
-        ]);
+        $limit = $request->get("limit", 999);
+        $page = $request->get("page", 1);
+        
+        $usersList = $userRepository->findAllWithPagination($customerId, $limit, $page);
 
         $jsonUsersList = $serializer->serialize($usersList, "json");
 

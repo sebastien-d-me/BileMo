@@ -38,4 +38,14 @@ class UserRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function findAllWithPagination($customer, $limit, $page)
+    {
+       $qb = $this->createQueryBuilder("u")
+        ->where("u.customer = ".$customer)
+        ->setFirstResult(($page - 1) * $limit)
+        ->setMaxResults($limit);
+        
+        return $qb->getQuery()->getResult();
+    }
 }
