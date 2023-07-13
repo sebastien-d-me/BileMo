@@ -26,6 +26,22 @@ class UserController extends AbstractController
         $this->jwtManager = $jwtManager;
     }
 
+    public function checkSameCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer): bool
+    {
+        $jwtToken = explode(".", str_replace("bearer ", "", $request->headers->get("Authorization")));
+        $decodedJwtToken = json_decode(base64_decode($jwtToken[1]), true);
+        $apiAccountData = $apiAccountRepository->findOneBy([
+            "email" => $decodedJwtToken["email"]
+        ]);
+        $apiAccountId = $apiAccountData->getCustomer()->getId();
+
+        if($apiAccountId === $customerId) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     #[Route("/api/users/{customerId}", name: "get_all_users_by_customer", methods: ["GET"])]
     public function getAllUsersByCustomer(int $customerId, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
@@ -60,13 +76,8 @@ class UserController extends AbstractController
         $content = $request->toArray();
         $customerId = $content["customerId"] ?? -1;
 
-        $jwtToken = explode(".", str_replace("bearer ", "", $request->headers->get("Authorization")));
-        $decodedJwtToken = json_decode(base64_decode($jwtToken[1]), true);
-        $apiAccountData = $apiAccountRepository->findOneBy([
-            "email" => $decodedJwtToken["email"]
-        ]);
-        $apiAccountId = $apiAccountData->getCustomer()->getId();
-        if($apiAccountId !== $customerId) {
+        $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
+        if($checkSameCustomer === false) {
             return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
         }
 
@@ -93,15 +104,10 @@ class UserController extends AbstractController
         $user = $userRepository->findOneBy([
             "id" => $userId
         ]);
-        $userCustomer = $user->getCustomer()->getId();
+        $customerId = $user->getCustomer()->getId();
 
-        $jwtToken = explode(".", str_replace("bearer ", "", $request->headers->get("Authorization")));
-        $decodedJwtToken = json_decode(base64_decode($jwtToken[1]), true);
-        $apiAccountData = $apiAccountRepository->findOneBy([
-            "email" => $decodedJwtToken["email"]
-        ]);
-        $apiAccountId = $apiAccountData->getCustomer()->getId();
-        if($apiAccountId !== $userCustomer) {
+        $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
+        if($checkSameCustomer === false) {
             return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
         }
 
