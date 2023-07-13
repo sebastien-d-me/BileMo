@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class UserController extends AbstractController
 {
@@ -25,6 +27,7 @@ class UserController extends AbstractController
     {
         $this->jwtManager = $jwtManager;
     }
+
 
     public function checkSameCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer): bool
     {
@@ -44,12 +47,17 @@ class UserController extends AbstractController
 
 
     #[Route("/api/users/{customerId}", name: "get_all_users_by_customer", methods: ["GET"])]
-    public function getAllUsersByCustomer(int $customerId, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
+    public function getAllUsersByCustomer(int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
-        $usersList = $userRepository->findBy([
-            "customer" => $customerId
-        ]);
+        $limit = $request->get("limit", 999);
+        $page = $request->get("page", 1);
 
+        $cache = new FilesystemAdapter();
+        $usersList = $cache->get("users", function(ItemInterface $item) use ($customerId, $limit, $page, $userRepository) {
+            $item->expiresAfter(5);
+            return $userRepository->findAllWithPagination($customerId, $limit, $page);
+        });
+        
         $jsonUsersList = $serializer->serialize($usersList, "json");
 
         return new JsonResponse($jsonUsersList, Response::HTTP_OK, [], true);
@@ -59,14 +67,18 @@ class UserController extends AbstractController
     #[Route("/api/users/{customerId}/{userId}", name: "get_user_details_by_customer", methods: ["GET"])]
     public function getUserDetailsByCustomer(int $customerId, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
-        $usersList = $userRepository->findOneBy([
-            "customer" => $customerId, 
-            "id" => $userId
-        ]);
+        $cache = new FilesystemAdapter();
+        $user = $cache->get("user", function(ItemInterface $item) use ($customerId, $userId, $userRepository) {
+            $item->expiresAfter(5);
+            return $userRepository->findOneBy([
+                "customer" => $customerId, 
+                "id" => $userId
+            ]);
+        });
 
-        $jsonUsersList = $serializer->serialize($usersList, "json");
+        $jsonUser = $serializer->serialize($user, "json");
 
-        return new JsonResponse($jsonUsersList, Response::HTTP_OK, [], true);
+        return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
 
@@ -89,6 +101,10 @@ class UserController extends AbstractController
 
         $user->setCustomer($customerRepository->find($customerId));
 
+        $cache = new FilesystemAdapter();
+        $cache->deleteItem("users");
+        $cache->deleteItem("user");
+
         $entityManager->persist($user);
         $entityManager->flush();
         
@@ -110,6 +126,10 @@ class UserController extends AbstractController
         if($checkSameCustomer === false) {
             return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
         }
+
+        $cache = new FilesystemAdapter();
+        $cache->deleteItem("users");
+        $cache->deleteItem("user");
 
         $entityManager->remove($user);
         $entityManager->flush();

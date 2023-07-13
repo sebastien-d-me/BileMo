@@ -38,4 +38,13 @@ class ProductRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function findAllWithPagination($limit, $page)
+    {
+       $qb = $this->createQueryBuilder("p")
+        ->setFirstResult(($page - 1) * $limit)
+        ->setMaxResults($limit);
+        
+        return $qb->getQuery()->getResult();
+    }
 }
