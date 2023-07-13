@@ -16,19 +16,6 @@ class Customer {
     +updated_at: datetime
 }
 
-'Product'
-class Product {
-    {static} +id: int
-    +brand: string
-    +model: string
-    +system: string
-    +storage: int
-    +price: double
-    +stock: int
-    +created_at: datetime
-    +updated_at: datetime
-}
-
 'User'
 class User {
     {static} +id: int
@@ -42,7 +29,32 @@ class User {
     +updated_at: datetime
 }
 
+'Api Account'
+class ApiAccount {
+    {static} +id: int
+    +customer_id: int
+    +email: string
+    +roles: string
+    +password: string
+    +created_at: datetime
+    +updated_at: datetime
+}
+
+'Product'
+class Product {
+    {static} +id: int
+    +brand: string
+    +model: string
+    +system: string
+    +storage: int
+    +price: double
+    +stock: int
+    +created_at: datetime
+    +updated_at: datetime
+}
+
 
 'Déroulement'
-Customer "1" -- "0..*" User: $warning("CREATE")
+User "0..*" --- "1" Customer: $warning("CREATE")
+ApiAccount "1" --- "1" Customer: $warning("HAVE")
 @enduml
