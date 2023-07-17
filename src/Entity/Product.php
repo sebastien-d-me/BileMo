@@ -4,7 +4,14 @@ namespace App\Entity;
 
 use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation as Serializer;
 
+/**
+ * @Serializer\XmlRoot("product")
+ *
+ * @Hateoas\Relation("self", href = "expr('/api/products/' ~ object.getId())")
+ */
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
 {
