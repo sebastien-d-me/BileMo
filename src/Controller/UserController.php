@@ -8,6 +8,9 @@ use App\Repository\ApiAccountRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\Serializer;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,7 +20,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -46,11 +48,16 @@ class UserController extends AbstractController
     }
 
 
-    #[Route("/api/users/{customerId}", name: "get_all_users_by_customer", methods: ["GET"])]
-    public function getAllUsersByCustomer(int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
+    #[Route("/api/customers/{customerId}/users", name: "get_all_users_by_customer", methods: ["GET"])]
+    public function getAllUsersByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
         $limit = $request->get("limit", 999);
         $page = $request->get("page", 1);
+
+        $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
+        if($checkSameCustomer === false) {
+            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_FORBIDDEN, [], true);
+        }
 
         $cache = new FilesystemAdapter();
         $usersList = $cache->get("users", function(ItemInterface $item) use ($customerId, $limit, $page, $userRepository) {
@@ -64,9 +71,14 @@ class UserController extends AbstractController
     }
 
 
-    #[Route("/api/users/{customerId}/{userId}", name: "get_user_details_by_customer", methods: ["GET"])]
-    public function getUserDetailsByCustomer(int $customerId, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
+    #[Route("/api/customers/{customerId}/users/{userId}", name: "get_user_details_by_customer", methods: ["GET"])]
+    public function getUserDetailsByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
+        $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
+        if($checkSameCustomer === false) {
+            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_FORBIDDEN, [], true);
+        }
+
         $cache = new FilesystemAdapter();
         $user = $cache->get("user", function(ItemInterface $item) use ($customerId, $userId, $userRepository) {
             $item->expiresAfter(5);
@@ -82,7 +94,7 @@ class UserController extends AbstractController
     }
 
 
-    #[Route("/api/users", name: "add_user_by_customer", methods: ["POST"])]
+    #[Route("/api/customers/{customerId}/users/create", name: "add_user_by_customer", methods: ["POST"])]
     public function addUserByCustomer(ApiAccountRepository $apiAccountRepository, CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
         $content = $request->toArray();
@@ -90,7 +102,7 @@ class UserController extends AbstractController
 
         $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
         if($checkSameCustomer === false) {
-            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
+            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_FORBIDDEN, [], true);
         }
 
         $user = $serializer->deserialize($request->getContent(), User::class, "json");
@@ -100,6 +112,7 @@ class UserController extends AbstractController
         }
 
         $user->setCustomer($customerRepository->find($customerId));
+        $user->setPassword(password_hash($content["password"], PASSWORD_DEFAULT));
 
         $cache = new FilesystemAdapter();
         $cache->deleteItem("users");
@@ -114,7 +127,7 @@ class UserController extends AbstractController
     }
 
 
-    #[Route("/api/users/{userId}", name: "delete_user_by_customer", methods: ["DELETE"])]
+    #[Route("/api/customers/{customerId}/users/{userId}/delete", name: "delete_user_by_customer", methods: ["DELETE"])]
     public function deleteUserByCustomer(ApiAccountRepository $apiAccountRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
         $user = $userRepository->findOneBy([
@@ -124,7 +137,7 @@ class UserController extends AbstractController
 
         $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
         if($checkSameCustomer === false) {
-            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_BAD_REQUEST, [], true);
+            return new JsonResponse($serializer->serialize("You can only manage users linked to your customer account.", "json"), Response::HTTP_FORBIDDEN, [], true);
         }
 
         $cache = new FilesystemAdapter();
