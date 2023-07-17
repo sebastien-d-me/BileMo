@@ -4,8 +4,16 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * @Serializer\XmlRoot("user")
+ *
+ * @Hateoas\Relation("self", href = "expr('/api/customers/' ~ object.getCustomer().getId() ~ '/users/' ~ object.getId())")
+ * @Hateoas\Relation("delete", href = "expr('/api/customers/' ~ object.getCustomer().getId() ~ '/users/' ~ object.getId())")
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
