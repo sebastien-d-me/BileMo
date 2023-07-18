@@ -51,7 +51,7 @@ class UserController extends AbstractController
     #[Route("/api/customers/{customerId}/users", name: "get_all_users_by_customer", methods: ["GET"])]
     public function getAllUsersByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
-        $limit = $request->get("limit", 999);
+        $limit = $request->get("limit", 5);
         $page = $request->get("page", 1);
 
         $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);

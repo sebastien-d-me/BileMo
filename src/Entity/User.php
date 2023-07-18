@@ -6,13 +6,15 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Hateoas\Configuration\Annotation as Hateoas;
 use JMS\Serializer\Annotation as Serializer;
+use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Since;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @Serializer\XmlRoot("user")
  *
- * @Hateoas\Relation("self", href = "expr('/api/customers/' ~ object.getCustomer().getId() ~ '/users/' ~ object.getId())")
- * @Hateoas\Relation("delete", href = "expr('/api/customers/' ~ object.getCustomer().getId() ~ '/users/' ~ object.getId())")
+ * @Hateoas\Relation("self", href = "expr('/api/customers/' ~ object.getCustomer().getId() ~ '/users/' ~ object.getId())", exclusion = @Hateoas\Exclusion(groups="getUsers"))
+ * @Hateoas\Relation("delete", href = "expr('/api/customers/' ~ object.getCustomer().getId() ~ '/users/' ~ object.getId())", exclusion = @Hateoas\Exclusion(groups="getUsers"))
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
@@ -20,38 +22,47 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getUsers"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "The email cannot be null.")]
+    #[Groups(["getUsers"])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "The username cannot be null.")]
+    #[Groups(["getUsers"])]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "The password cannot be null.")]
+    #[Groups(["getUsers"])]
     private ?string $password = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: "The firstname cannot be null.")]
+    #[Groups(["getUsers"])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank(message: "The lastname cannot be null.")]
+    #[Groups(["getUsers"])]
     private ?string $lastName = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["getUsers"])]
     private ?Customer $customer = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: "The creation date cannot be null.")]
+    #[Groups(["getUsers"])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: "The updated date cannot be null. Use the same value as creation date if this is a new user.")]
+    #[Groups(["getUsers"])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     public function getId(): ?int

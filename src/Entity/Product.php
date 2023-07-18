@@ -6,11 +6,13 @@ use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Hateoas\Configuration\Annotation as Hateoas;
 use JMS\Serializer\Annotation as Serializer;
+use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Since;
 
 /**
  * @Serializer\XmlRoot("product")
  *
- * @Hateoas\Relation("self", href = "expr('/api/products/' ~ object.getId())")
+ * @Hateoas\Relation("self", href = "expr('/api/products/' ~ object.getId())", exclusion = @Hateoas\Exclusion(groups="getProducts"))
  */
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
@@ -18,30 +20,39 @@ class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getProducts"])]
     private ?string $brand = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getProducts"])]
     private ?string $model = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getProducts"])]
     private ?string $system = null;
 
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?int $storage = null;
 
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?float $price = null;
 
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?int $stock = null;
 
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     public function getId(): ?int

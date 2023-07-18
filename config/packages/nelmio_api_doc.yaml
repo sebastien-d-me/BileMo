@@ -19,7 +19,7 @@ nelmio_api_doc:
                                     $ref: "#/components/schemas/Credentials"
                     responses:
                         "200":
-                            description: Retrieve the JWT token
+                            description: Retrieve the JWT token.
                             content:
                                 application/json:
                                     schema:
