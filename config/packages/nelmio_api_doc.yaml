@@ -4,6 +4,50 @@ nelmio_api_doc:
             title: BileMo
             description: Documentation for BileMo project | Sébastien DELAHAYE
             version: 1.0.0
+        paths:
+            /api/login_check:
+                post:
+                    tags:
+                        - JWT Token
+                    operationId: postCredentialsItem
+                    summary: Get the JWT token.
+                    requestBody:
+                        description: Create a new JWT token
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: "#/components/schemas/Credentials"
+                    responses:
+                        "200":
+                            description: Retrieve the JWT token
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: "#/components/schemas/Token"
+        components:
+            schemas:
+                Token:
+                    type: object
+                    properties:
+                        token:
+                            type: string
+                            readOnly: true
+                Credentials:
+                    type: object
+                    properties:
+                        email:
+                            type: string
+                            default: apitest@business.com
+                        password:
+                            type: string
+                            default: apitest123
+            securitySchemes:
+                bearerAuth:            
+                    type: apiKey
+                    in: header
+                    name: Authorization
+        security:
+            - bearerAuth: []
     areas: # to filter documented areas
         path_patterns:
-            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
+            - ^/api(?!/doc$)
