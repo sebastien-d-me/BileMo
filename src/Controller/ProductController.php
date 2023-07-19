@@ -72,11 +72,11 @@ class ProductController extends AbstractController
 
 
     /**
-     * Get a product by ID.
+     * Get a product.
      *
      * @OA\Response(
      *     response=200,
-     *     description="Retrieve a product by its ID.",
+     *     description="Retrieve the product details.",
      *     @OA\JsonContent(
      *        type="array",
      *        @OA\Items(ref=@Model(type=Product::class, groups={"getProducts"}))
@@ -86,7 +86,7 @@ class ProductController extends AbstractController
      * @OA\Parameter(
      *     name="productId",
      *     in="path",
-     *     description="The ID of the product you want to see.",
+     *     description="The ID of the product.",
      *     @OA\Schema(type="integer", default=1)
      * )
      * @OA\Tag(name="Products")

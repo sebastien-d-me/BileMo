@@ -54,7 +54,7 @@ class UserController extends AbstractController
 
 
     /**
-     * Get all the users by customers.
+     * Get all the users by customer.
      *
      * @OA\Response(
      *     response=200,
@@ -68,7 +68,7 @@ class UserController extends AbstractController
      * @OA\Parameter(
      *     name="customerId",
      *     in="path",
-     *     description="The ID of the customer you wish to see his users.",
+     *     description="The ID of the customer.",
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -116,11 +116,11 @@ class UserController extends AbstractController
 
 
     /**
-     * Get a user by ID.
+     * Get a user by customer.
      *
      * @OA\Response(
      *     response=200,
-     *     description="Retrieve a user by its ID.",
+     *     description="Retrieve the user details.",
      *     @OA\JsonContent(
      *        type="array",
      *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
@@ -130,14 +130,14 @@ class UserController extends AbstractController
      * @OA\Parameter(
      *     name="customerId",
      *     in="path",
-     *     description="The ID of the customer you wish to see his users.",
+     *     description="The ID of the customer.",
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
      * @OA\Parameter(
      *     name="userId",
      *     in="path",
-     *     description="The ID of the user you want to see.",
+     *     description="The ID of the use.",
      *     @OA\Schema(type="integer", default=1)
      * )
      * @OA\Tag(name="Users")
@@ -169,6 +169,33 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Add a user linked to a customer.
+     *
+     * @OA\Response(
+     *     response=201,
+     *     description="Create the user.",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     description="The ID of the user.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users/create", name: "add_user_by_customer", methods: ["POST"])]
     public function addUserByCustomer(ApiAccountRepository $apiAccountRepository, CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
@@ -202,6 +229,29 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Delete a user linked to a customer.
+     *
+     * @OA\Response(
+     *     response=204,
+     *     description="Delete the user.",
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     description="The ID of the user.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users/{userId}/delete", name: "delete_user_by_customer", methods: ["DELETE"])]
     public function deleteUserByCustomer(ApiAccountRepository $apiAccountRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
