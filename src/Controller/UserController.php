@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ApiAccount;
+use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\ApiAccountRepository;
 use App\Repository\CustomerRepository;
@@ -13,11 +14,15 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -48,6 +53,41 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Get all the users by customers.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Retrieve all the users linked to a customer.",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer you wish to see his users.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="Page of the users list.",
+     *     @OA\Schema(type="int", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="Number of items per page.",
+     *     @OA\Schema(type="int", default=5)
+     * )
+     * 
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users", name: "get_all_users_by_customer", methods: ["GET"])]
     public function getAllUsersByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
@@ -64,6 +104,10 @@ class UserController extends AbstractController
             $item->expiresAfter(5);
             return $userRepository->findAllWithPagination($customerId, $limit, $page);
         });
+
+        if($usersList === null) {
+            throw new NotFoundHttpException("No results found.");
+        }
         
         $jsonUsersList = $serializer->serialize($usersList, "json");
 
@@ -71,6 +115,33 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Get a user by ID.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Retrieve a user by its ID.",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer you wish to see his users.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     description="The ID of the user you want to see.",
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users/{userId}", name: "get_user_details_by_customer", methods: ["GET"])]
     public function getUserDetailsByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
@@ -87,6 +158,10 @@ class UserController extends AbstractController
                 "id" => $userId
             ]);
         });
+
+        if($user === null) {
+            throw new NotFoundHttpException("No results found.");
+        }
 
         $jsonUser = $serializer->serialize($user, "json");
 

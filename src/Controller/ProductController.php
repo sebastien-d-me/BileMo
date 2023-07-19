@@ -47,11 +47,6 @@ class ProductController extends AbstractController
      * )
      * 
      * @OA\Tag(name="Products")
-     *
-     * @param ProductRepository $productRepository
-     * @param Request $request
-     * @param SerializerInterface $serializer
-     * @return JsonResponse
      */
     #[Route("/api/products", name: "get_all_products", methods: ["GET"])]
     public function getAllProducts(ProductRepository $productRepository, Request $request, SerializerInterface $serializer): JsonResponse
@@ -64,6 +59,10 @@ class ProductController extends AbstractController
             $item->expiresAfter(5);
             return $productRepository->findAllWithPagination($limit, $page);
         });
+
+        if($productsList === null) {
+            throw new NotFoundHttpException("No results found.");
+        }
         
         $context = SerializationContext::create()->setGroups(["getProducts"]);
         $jsonProductsList = $serializer->serialize($productsList, "json", $context);
@@ -83,6 +82,7 @@ class ProductController extends AbstractController
      *        @OA\Items(ref=@Model(type=Product::class, groups={"getProducts"}))
      *     )
      * )
+     * 
      * @OA\Parameter(
      *     name="productId",
      *     in="path",
@@ -90,12 +90,6 @@ class ProductController extends AbstractController
      *     @OA\Schema(type="integer", default=1)
      * )
      * @OA\Tag(name="Products")
-     * 
-     * @param int $productId
-     * @param ProductRepository $productRepository
-     * @param Request $request
-     * @param SerializerInterface $serializer
-     * @return JsonResponse
      */
     #[Route("/api/products/{productId}", name: "get_product", methods: ["GET"])]
     public function getProductDetails(int $productId, ProductRepository $productRepository, SerializerInterface $serializer): JsonResponse
@@ -107,6 +101,10 @@ class ProductController extends AbstractController
                 "id" => $productId
             ]);
         });
+
+        if($product === null) {
+            throw new NotFoundHttpException("No results found.");
+        }
 
         $context = SerializationContext::create()->setGroups(["getProducts"]);
         $jsonProduct = $serializer->serialize($product, "json", $context);
