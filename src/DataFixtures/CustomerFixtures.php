@@ -13,17 +13,25 @@ class CustomerFixtures extends Fixture
     {
         $faker = Factory::create();
 
+        $customerDate = \DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $faker->dateTimeThisYear()->format("Y-m-d H:i:s"));
+
+        $customer = new Customer();
+        $customer->setName("apitest");
+        $customer->setCreatedAt($customerDate);
+        $customer->setUpdatedAt($customerDate);
+        
+        $manager->persist($customer);
+
         for($customerIndex = 0; $customerIndex < 6; $customerIndex++) {
             $name = $faker->domainWord();
-            $customerDate = \DateTimeImmutable::createFromFormat("Y-m-d H:i:s", $faker->dateTimeThisYear()->format("Y-m-d H:i:s"));
-
+            
             $customer = new Customer();
             $customer->setName($name);
             $customer->setCreatedAt($customerDate);
             $customer->setUpdatedAt($customerDate);
 
             $manager->persist($customer);
-        }
+        }        
 
         $manager->flush();
     }

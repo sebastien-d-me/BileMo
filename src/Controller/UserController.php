@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ApiAccount;
+use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\ApiAccountRepository;
 use App\Repository\CustomerRepository;
@@ -13,11 +14,15 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -48,10 +53,48 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Get all the users by customer.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Retrieve all the users linked to a customer.",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer.",
+     *     required=true,
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="Page of the users list.",
+     *     required=true,
+     *     @OA\Schema(type="int", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="Number of items per page.",
+     *     required=true,
+     *     @OA\Schema(type="int", default=5)
+     * )
+     * 
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users", name: "get_all_users_by_customer", methods: ["GET"])]
     public function getAllUsersByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, UserRepository $userRepository): JsonResponse
     {
-        $limit = $request->get("limit", 999);
+        $limit = $request->get("limit", 5);
         $page = $request->get("page", 1);
 
         $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
@@ -64,6 +107,10 @@ class UserController extends AbstractController
             $item->expiresAfter(5);
             return $userRepository->findAllWithPagination($customerId, $limit, $page);
         });
+
+        if($usersList === null) {
+            throw new NotFoundHttpException("No results found.");
+        }
         
         $jsonUsersList = $serializer->serialize($usersList, "json");
 
@@ -71,6 +118,36 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Get a user by customer.
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Retrieve the user details.",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer.",
+     *     required=true,
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     description="The ID of the use.",
+     *     required=true,
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users/{userId}", name: "get_user_details_by_customer", methods: ["GET"])]
     public function getUserDetailsByCustomer(ApiAccountRepository $apiAccountRepository, int $customerId, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
@@ -88,13 +165,54 @@ class UserController extends AbstractController
             ]);
         });
 
+        if($user === null) {
+            throw new NotFoundHttpException("No results found.");
+        }
+
         $jsonUser = $serializer->serialize($user, "json");
 
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
 
-    #[Route("/api/customers/{customerId}/users/create", name: "add_user_by_customer", methods: ["POST"])]
+    /**
+     * Add a user linked to a customer.
+     *
+     * @OA\Response(
+     *     response=201,
+     *     description="Create the user.",
+     *     @OA\JsonContent(
+     *        type="object",
+     *        @OA\Property(property="customerId", type="integer", example=1),
+     *        @OA\Property(property="email", type="string", example="john.doe@example.com"),
+     *        @OA\Property(property="username", type="string", example="john.doe"),
+     *        @OA\Property(property="password", type="string", example="pass123"),
+     *        @OA\Property(property="firstName", type="string", example="John"),
+     *        @OA\Property(property="lastName", type="string", example="Doe"),
+     *        @OA\Property(property="createdAt", type="string", example="2023-07-18 12:45:16"),
+     *        @OA\Property(property="updatedAt", type="string", example="2023-07-19 14:25:37")
+     *     )
+     * )
+     *  
+     * @OA\RequestBody(
+     *     description="User data.",
+     *     required=true,
+     *     @OA\JsonContent(
+     *        type="object",
+     *        @OA\Property(property="customerId", type="integer"),
+     *        @OA\Property(property="email", type="string"),
+     *        @OA\Property(property="username", type="string"),
+     *        @OA\Property(property="password", type="string"),
+     *        @OA\Property(property="firstName", type="string"),
+     *        @OA\Property(property="lastName", type="string"),
+     *        @OA\Property(property="createdAt", type="string"),
+     *        @OA\Property(property="updatedAt", type="string")
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Users")
+     */
+    #[Route("/api/customers/users/create", name: "add_user_by_customer", methods: ["POST"])]
     public function addUserByCustomer(ApiAccountRepository $apiAccountRepository, CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
         $content = $request->toArray();
@@ -127,12 +245,43 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * Delete a user linked to a customer.
+     *
+     * @OA\Response(
+     *     response=204,
+     *     description="Delete the user.",
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="customerId",
+     *     in="path",
+     *     description="The ID of the customer.",
+     *     required=true,
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="userId",
+     *     in="path",
+     *     description="The ID of the user.",
+     *     required=true,
+     *     @OA\Schema(type="integer", default=1)
+     * )
+     * 
+     * @OA\Tag(name="Users")
+     */
     #[Route("/api/customers/{customerId}/users/{userId}/delete", name: "delete_user_by_customer", methods: ["DELETE"])]
     public function deleteUserByCustomer(ApiAccountRepository $apiAccountRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, int $userId, UserRepository $userRepository): JsonResponse
     {
         $user = $userRepository->findOneBy([
             "id" => $userId
         ]);
+
+        if($user === null) {
+            throw new NotFoundHttpException("The user does not exist.");
+        }
+
         $customerId = $user->getCustomer()->getId();
 
         $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);

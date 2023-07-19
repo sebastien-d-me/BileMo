@@ -37,7 +37,11 @@ class ApiAccountFixtures extends Fixture implements DependentFixtureInterface
 
             $apiAccount = new ApiAccount();
 
-            $password = $this->userPasswordHasher->hashPassword($apiAccount, $customer->getName()."123");
+            if($customer->getName() === "apitest") {
+                $password = $this->userPasswordHasher->hashPassword($apiAccount, $customer->getName()."123");
+            } else {
+                $password = $this->userPasswordHasher->hashPassword($apiAccount, $faker->password());
+            }
             
             $apiAccount->setCustomer($customer);
             $apiAccount->setEmail($email);
