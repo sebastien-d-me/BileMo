@@ -184,24 +184,16 @@ class UserController extends AbstractController
      *     @OA\JsonContent(
      *        type="object",
      *        @OA\Property(property="customerId", type="integer", example=1),
-     *        @OA\Property(property="email", type="string", example="sebastien.delahaye@example.com"),
-     *        @OA\Property(property="username", type="string", example="sebastien.delahaye"),
-     *        @OA\Property(property="password", type="string", example="motdepasse"),
-     *        @OA\Property(property="firstName", type="string", example="Sébastien"),
-     *        @OA\Property(property="lastName", type="string", example="Delahaye"),
-     *        @OA\Property(property="createdAt", type="string", example="2023-06-20 04:08:09"),
-     *        @OA\Property(property="updatedAt", type="string", example="2023-06-21 15:04:05")
+     *        @OA\Property(property="email", type="string", example="john.doe@example.com"),
+     *        @OA\Property(property="username", type="string", example="john.doe"),
+     *        @OA\Property(property="password", type="string", example="pass123"),
+     *        @OA\Property(property="firstName", type="string", example="John"),
+     *        @OA\Property(property="lastName", type="string", example="Doe"),
+     *        @OA\Property(property="createdAt", type="string", example="2023-07-18 12:45:16"),
+     *        @OA\Property(property="updatedAt", type="string", example="2023-07-19 14:25:37")
      *     )
      * )
-     * 
-     * @OA\Parameter(
-     *     name="customerId",
-     *     in="path",
-     *     description="The ID of the customer.",
-     *     required=true,
-     *     @OA\Schema(type="integer", default=1)
-     * )
-     * 
+     *  
      * @OA\RequestBody(
      *     description="User data.",
      *     required=true,
@@ -220,7 +212,7 @@ class UserController extends AbstractController
      * 
      * @OA\Tag(name="Users")
      */
-    #[Route("/api/customers/{customerId}/users/create", name: "add_user_by_customer", methods: ["POST"])]
+    #[Route("/api/customers/users/create", name: "add_user_by_customer", methods: ["POST"])]
     public function addUserByCustomer(ApiAccountRepository $apiAccountRepository, CustomerRepository $customerRepository, EntityManagerInterface $entityManager, Request $request, SerializerInterface $serializer, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
         $content = $request->toArray();
@@ -285,6 +277,11 @@ class UserController extends AbstractController
         $user = $userRepository->findOneBy([
             "id" => $userId
         ]);
+
+        if($user === null) {
+            throw new NotFoundHttpException("The user does not exist.");
+        }
+
         $customerId = $user->getCustomer()->getId();
 
         $checkSameCustomer = $this->checkSameCustomer($apiAccountRepository, $customerId, $request, $serializer);
