@@ -69,6 +69,7 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
+     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -76,6 +77,7 @@ class UserController extends AbstractController
      *     name="page",
      *     in="query",
      *     description="Page of the users list.",
+     *     required=true,
      *     @OA\Schema(type="int", default=1)
      * )
      * 
@@ -83,6 +85,7 @@ class UserController extends AbstractController
      *     name="limit",
      *     in="query",
      *     description="Number of items per page.",
+     *     required=true,
      *     @OA\Schema(type="int", default=5)
      * )
      * 
@@ -131,6 +134,7 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
+     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -138,8 +142,10 @@ class UserController extends AbstractController
      *     name="userId",
      *     in="path",
      *     description="The ID of the use.",
+     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
+     * 
      * @OA\Tag(name="Users")
      */
     #[Route("/api/customers/{customerId}/users/{userId}", name: "get_user_details_by_customer", methods: ["GET"])]
@@ -176,8 +182,15 @@ class UserController extends AbstractController
      *     response=201,
      *     description="Create the user.",
      *     @OA\JsonContent(
-     *        type="array",
-     *        @OA\Items(ref=@Model(type=User::class, groups={"getUsers"}))
+     *        type="object",
+     *        @OA\Property(property="customerId", type="integer", example=1),
+     *        @OA\Property(property="email", type="string", example="sebastien.delahaye@example.com"),
+     *        @OA\Property(property="username", type="string", example="sebastien.delahaye"),
+     *        @OA\Property(property="password", type="string", example="motdepasse"),
+     *        @OA\Property(property="firstName", type="string", example="Sébastien"),
+     *        @OA\Property(property="lastName", type="string", example="Delahaye"),
+     *        @OA\Property(property="createdAt", type="string", example="2023-06-20 04:08:09"),
+     *        @OA\Property(property="updatedAt", type="string", example="2023-06-21 15:04:05")
      *     )
      * )
      * 
@@ -185,15 +198,26 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
+     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
-     * @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     description="The ID of the user.",
-     *     @OA\Schema(type="integer", default=1)
+     * @OA\RequestBody(
+     *     description="User data.",
+     *     required=true,
+     *     @OA\JsonContent(
+     *        type="object",
+     *        @OA\Property(property="customerId", type="integer"),
+     *        @OA\Property(property="email", type="string"),
+     *        @OA\Property(property="username", type="string"),
+     *        @OA\Property(property="password", type="string"),
+     *        @OA\Property(property="firstName", type="string"),
+     *        @OA\Property(property="lastName", type="string"),
+     *        @OA\Property(property="createdAt", type="string"),
+     *        @OA\Property(property="updatedAt", type="string")
+     *     )
      * )
+     * 
      * @OA\Tag(name="Users")
      */
     #[Route("/api/customers/{customerId}/users/create", name: "add_user_by_customer", methods: ["POST"])]
@@ -241,6 +265,7 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
+     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -248,8 +273,10 @@ class UserController extends AbstractController
      *     name="userId",
      *     in="path",
      *     description="The ID of the user.",
+     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
+     * 
      * @OA\Tag(name="Users")
      */
     #[Route("/api/customers/{customerId}/users/{userId}/delete", name: "delete_user_by_customer", methods: ["DELETE"])]
