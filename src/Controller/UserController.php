@@ -69,7 +69,6 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
-     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -77,7 +76,6 @@ class UserController extends AbstractController
      *     name="page",
      *     in="query",
      *     description="Page of the users list.",
-     *     required=true,
      *     @OA\Schema(type="int", default=1)
      * )
      * 
@@ -85,7 +83,6 @@ class UserController extends AbstractController
      *     name="limit",
      *     in="query",
      *     description="Number of items per page.",
-     *     required=true,
      *     @OA\Schema(type="int", default=5)
      * )
      * 
@@ -134,7 +131,6 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
-     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -142,7 +138,6 @@ class UserController extends AbstractController
      *     name="userId",
      *     in="path",
      *     description="The ID of the use.",
-     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -257,7 +252,6 @@ class UserController extends AbstractController
      *     name="customerId",
      *     in="path",
      *     description="The ID of the customer.",
-     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -265,7 +259,6 @@ class UserController extends AbstractController
      *     name="userId",
      *     in="path",
      *     description="The ID of the user.",
-     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
