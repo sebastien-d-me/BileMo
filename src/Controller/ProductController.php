@@ -37,7 +37,6 @@ class ProductController extends AbstractController
      *     name="page",
      *     in="query",
      *     description="Page of the products list.",
-     *     required=true,
      *     @OA\Schema(type="int", default=1)
      * )
      * 
@@ -45,7 +44,6 @@ class ProductController extends AbstractController
      *     name="limit",
      *     in="query",
      *     description="Number of items per page.",
-     *     required=true,
      *     @OA\Schema(type="int", default=5)
      * )
      * 
@@ -90,7 +88,6 @@ class ProductController extends AbstractController
      *     name="productId",
      *     in="path",
      *     description="The ID of the product.",
-     *     required=true,
      *     @OA\Schema(type="integer", default=1)
      * )
      * @OA\Tag(name="Products")
