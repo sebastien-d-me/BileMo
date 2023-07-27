@@ -137,7 +137,7 @@ class UserController extends AbstractController
      * @OA\Parameter(
      *     name="userId",
      *     in="path",
-     *     description="The ID of the use.",
+     *     description="The ID of the user.",
      *     @OA\Schema(type="integer", default=1)
      * )
      * 
@@ -221,6 +221,7 @@ class UserController extends AbstractController
         $user = $serializer->deserialize($request->getContent(), User::class, "json");
 
         if($validator->validate($user)->count() > 0) {
+            $errors = "Check if all the fields are filled.";
             return new JsonResponse($serializer->serialize($errors, "json"), Response::HTTP_BAD_REQUEST, [], true);
         }
 
