@@ -17,3 +17,11 @@ Create a web service exposing an API
 5. Effectuez la commande : `php bin/console doctrine:migrations:migrate` à la racine du projet
 6. Effectuez la commande : `php bin/console doctrine:fixtures:load` à la racine du projet
 7. Lancez le projet avec la commande : `symfony serve`
+
+### Compétences acquises
+- Exposer une API REST avec Symfony
+- Lancer une authentification à chaque requête HTTP
+- Produire une documentation technique
+- Analyser et optimiser les performances d’une application
+- Concevoir une architecture efficace et adaptée
+- Suivre la qualité d’un projet
